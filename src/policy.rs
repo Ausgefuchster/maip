@@ -50,11 +50,18 @@ impl Merge<Vec<String>> for Vec<String> {
     }
 }
 
+/// Merges the two statements together
+/// - If they have a different effect, but action and resource are the same,
+///   return a deny statement because deny always overrides allow
+/// - If they have the same effect, merge the action and resource
 pub fn merge_statements(
     first_statement: &PolicyStatement,
     second_statement: &PolicyStatement,
 ) -> Option<PolicyStatement> {
     if first_statement.effect != second_statement.effect {
+        if same_action_and_resource(first_statement, second_statement) {
+            return as_deny_statement(first_statement);
+        }
         return None;
     }
 
@@ -73,4 +80,20 @@ pub fn merge_statements(
         .merge(second_statement.resource.clone());
 
     Some(merged_statement)
+}
+
+fn same_action_and_resource(
+    first_statement: &PolicyStatement,
+    second_statement: &PolicyStatement,
+) -> bool {
+    first_statement.action == second_statement.action
+        && first_statement.resource == second_statement.resource
+}
+
+fn as_deny_statement(statement: &PolicyStatement) -> Option<PolicyStatement> {
+    Some(PolicyStatement::new(
+        "Deny".to_string(),
+        statement.action.clone(),
+        statement.resource.clone(),
+    ))
 }
