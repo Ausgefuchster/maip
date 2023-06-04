@@ -73,7 +73,7 @@ pub fn merge_statements(
 
     merged_statement
         .action
-        .extend(second_statement.action.clone());
+        .merge(second_statement.action.clone());
 
     merged_statement
         .resource
