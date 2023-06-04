@@ -1,7 +1,7 @@
 use maip::policy::{merge_statements, PolicyStatement};
 
 #[test]
-fn test_merge_statements_succsessful() {
+fn test_merge_allow_statements() {
     let first_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
@@ -21,24 +21,66 @@ fn test_merge_statements_succsessful() {
         vec!["ec2:Describe*".to_string(), "rds:Describe*".to_string()],
         vec!["*".to_string()],
     );
-
     assert_eq!(merged_statement.unwrap(), expected_statement);
 }
 
-// #[test]
-// fn test_merge_statement_successful() {
-//     let ec2_policy = File::open("./tests/assets/AmazonEC2FullAccessPolicy.json").unwrap();
-//     let ec2_policy: serde_json::Value =
-//         serde_json::from_reader(ec2_policy).expect("file should be proper JSON");
+#[test]
+fn test_merge_different_resource() {
+    let first_statement = PolicyStatement::new(
+        "Allow".to_string(),
+        vec!["ec2:Describe*".to_string()],
+        vec!["*".to_string()],
+    );
+    let second_statement = PolicyStatement::new(
+        "Allow".to_string(),
+        vec!["ec2:Describe*".to_string()],
+        vec!["arn:aws:ec2:us-east-1:123456789012:instance/*".to_string()],
+    );
+    let merged_statement = merge_statements(&first_statement, &second_statement);
 
-//     let ec2_policy: PolicyDocument = serde_json::from_value(ec2_policy).unwrap();
+    let expected_statement = PolicyStatement::new(
+        "Allow".to_string(),
+        vec!["ec2:Describe*".to_string()],
+        vec!["*".to_string()],
+    );
+    assert_eq!(merged_statement.unwrap(), expected_statement);
+}
 
-//     let rds_policy = File::open("./tests/assets/AmazonRDSFullAccessPolicy.json").unwrap();
-//     let rds_policy: serde_json::Value =
-//         serde_json::from_reader(rds_policy).expect("file should be proper JSON");
+#[test]
+fn test_merge_allow_and_deny_same() {
+    let first_statement = PolicyStatement::new(
+        "Allow".to_string(),
+        vec!["ec2:Describe*".to_string()],
+        vec!["*".to_string()],
+    );
+    let second_statement = PolicyStatement::new(
+        "Deny".to_string(),
+        vec!["ec2:Describe*".to_string()],
+        vec!["*".to_string()],
+    );
+    let merged_statement = merge_statements(&first_statement, &second_statement);
 
-//     let rds_policy: PolicyDocument = serde_json::from_value(rds_policy).unwrap();
+    let expected_statement = PolicyStatement::new(
+        "Deny".to_string(),
+        vec!["ec2:Describe*".to_string()],
+        vec!["*".to_string()],
+    );
+    assert_eq!(merged_statement.unwrap(), expected_statement);
+}
 
-//     println!("{:#?}", rds_policy);
-//     println!("{:#?}", ec2_policy);
-// }
+#[test]
+fn test_merge_allow_and_deny_different() {
+    let first_statement = PolicyStatement::new(
+        "Allow".to_string(),
+        vec!["ec2:*".to_string()],
+        vec!["*".to_string()],
+    );
+    let second_statement = PolicyStatement::new(
+        "Deny".to_string(),
+        vec!["ec2:Describe*".to_string()],
+        vec!["*".to_string()],
+    );
+    let merged_statement = merge_statements(&first_statement, &second_statement);
+
+    assert!(merged_statement.is_none());
+}
