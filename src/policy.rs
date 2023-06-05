@@ -145,10 +145,7 @@ fn can_merge_resources(first_resources: &[String], second_resources: &[String]) 
 }
 
 fn get_asterisk(first_resources: &[String], second_resources: &[String]) -> Option<String> {
-    if first_resources.contains(&"*".to_string()) {
-        return Some("*".to_string());
-    }
-    if second_resources.contains(&"*".to_string()) {
+    if first_resources.contains(&"*".to_string()) || second_resources.contains(&"*".to_string()) {
         return Some("*".to_string());
     }
     None
