@@ -2,16 +2,26 @@ use serde::{Deserialize, Serialize};
 
 use crate::json_string_or_vec::string_or_seq_string;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct PolicyDocument {
     version: String,
-    statement: Vec<PolicyStatement>,
+    pub statement: Vec<PolicyStatement>,
 }
 
 impl PolicyDocument {
     pub fn new(version: String, statement: Vec<PolicyStatement>) -> Self {
         Self { version, statement }
+    }
+
+    /// Sorts the statements by effect
+    /// Then by action length
+    pub fn sort(&mut self) {
+        self.statement.sort_by(|a, b| {
+            a.effect
+                .cmp(&b.effect)
+                .then(a.action.cmp(&b.action))
+        });
     }
 }
 
@@ -71,6 +81,60 @@ impl Merge<Vec<String>> for Vec<String> {
             }
         });
     }
+}
+
+pub fn merge_policy_documents(
+    first_document: &PolicyDocument,
+    second_document: &PolicyDocument,
+) -> Option<PolicyDocument> {
+    assert!(
+        first_document.version.as_str() == "2012-10-17",
+        "Only version 2012-10-17 is supported"
+    );
+    assert!(
+        first_document.version == second_document.version,
+        "Only version 2012-10-17 is supported"
+    );
+
+    let mut all_statements = first_document.statement.clone();
+    all_statements.extend(second_document.statement.clone());
+
+    let mut new_policy_document =
+        PolicyDocument::new(first_document.version.clone(), all_statements);
+    merge_policy_document_statements(&mut new_policy_document);
+
+    new_policy_document.sort();
+    Some(new_policy_document)
+}
+
+pub fn merge_policy_document_statements(document: &mut PolicyDocument) {
+    let mut merged_statements: Vec<PolicyStatement> = Vec::new();
+
+    // iterate over all statements
+    // merge these statements with all merged_statements
+    // if the result is Some, add it to the merged_statements and
+    // remove the old one use for the merge
+    // if the result is None for all entries in merged_statements,
+    // add it to the merged_statements
+
+    for statement in document.statement.iter() {
+        let mut merged = false;
+        for other_statement in merged_statements.iter_mut() {
+            if let Some(merged_statement) = merge_statements(statement, other_statement) {
+                *other_statement = merged_statement;
+                other_statement.action.sort_by_key(|a| a.to_lowercase());
+                merged = true;
+                break;
+            }
+        }
+        if !merged {
+            let mut statement = statement.clone();
+            statement.action.sort_by_key(|a| a.to_lowercase());
+            merged_statements.push(statement);
+        }
+    }
+
+    document.statement = merged_statements;
 }
 
 /// Merges the two statements together
@@ -141,7 +205,7 @@ fn as_deny_statement(statement: &PolicyStatement) -> Option<PolicyStatement> {
 }
 
 fn can_merge_resources(first_resources: &[String], second_resources: &[String]) -> bool {
-    first_resources == second_resources || get_asterisk(first_resources, second_resources).is_some()
+    first_resources == second_resources
 }
 
 fn get_asterisk(first_resources: &[String], second_resources: &[String]) -> Option<String> {
