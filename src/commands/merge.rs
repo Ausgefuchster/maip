@@ -1,4 +1,6 @@
-use maip::policy::{merge_policy_documents, policy_from_file, policy_to_file, PolicyDocument};
+use maip::policy::{
+    merge_policy_documents, policy_from_file, policy_to_file, PolicyDocument,
+};
 
 use crate::Command;
 
