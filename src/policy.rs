@@ -1,3 +1,9 @@
+use std::{
+    error::Error,
+    fs::File,
+    io::{BufReader, BufWriter},
+};
+
 use serde::{Deserialize, Serialize};
 
 use crate::json_string_or_vec::string_or_seq_string;
@@ -17,11 +23,8 @@ impl PolicyDocument {
     /// Sorts the statements by effect
     /// Then by action length
     pub fn sort(&mut self) {
-        self.statement.sort_by(|a, b| {
-            a.effect
-                .cmp(&b.effect)
-                .then(a.action.cmp(&b.action))
-        });
+        self.statement
+            .sort_by(|a, b| a.effect.cmp(&b.effect).then(a.action.cmp(&b.action)));
     }
 }
 
@@ -83,39 +86,28 @@ impl Merge<Vec<String>> for Vec<String> {
     }
 }
 
-pub fn merge_policy_documents(
-    first_document: &PolicyDocument,
-    second_document: &PolicyDocument,
-) -> Option<PolicyDocument> {
+pub fn merge_policy_documents(documents: &[PolicyDocument]) -> Option<PolicyDocument> {
     assert!(
-        first_document.version.as_str() == "2012-10-17",
-        "Only version 2012-10-17 is supported"
-    );
-    assert!(
-        first_document.version == second_document.version,
+        documents.iter().all(|d| d.version == "2012-10-17"),
         "Only version 2012-10-17 is supported"
     );
 
-    let mut all_statements = first_document.statement.clone();
-    all_statements.extend(second_document.statement.clone());
+    let mut new_document = documents.iter().fold(
+        PolicyDocument::new("2012-10-17".to_string(), Vec::new()),
+        |mut acc, document| {
+            acc.statement.extend(document.statement.clone());
+            acc
+        },
+    );
 
-    let mut new_policy_document =
-        PolicyDocument::new(first_document.version.clone(), all_statements);
-    merge_policy_document_statements(&mut new_policy_document);
+    merge_policy_document_statements(&mut new_document);
 
-    new_policy_document.sort();
-    Some(new_policy_document)
+    new_document.sort();
+    Some(new_document)
 }
 
 pub fn merge_policy_document_statements(document: &mut PolicyDocument) {
     let mut merged_statements: Vec<PolicyStatement> = Vec::new();
-
-    // iterate over all statements
-    // merge these statements with all merged_statements
-    // if the result is Some, add it to the merged_statements and
-    // remove the old one use for the merge
-    // if the result is None for all entries in merged_statements,
-    // add it to the merged_statements
 
     for statement in document.statement.iter() {
         let mut merged = false;
@@ -185,6 +177,20 @@ pub fn merge_statements(
         return Some(merged_statement);
     }
     None
+}
+
+pub fn policy_from_file(file: &str) -> Result<PolicyDocument, Box<dyn Error>> {
+    let file = File::open(file)?;
+    let reader = BufReader::new(file);
+    let policy_document: PolicyDocument = serde_json::from_reader(reader)?;
+    Ok(policy_document)
+}
+
+pub fn policy_to_file(file: &str, policy_document: &PolicyDocument) -> Result<(), Box<dyn Error>> {
+    let file = File::create(file)?;
+    let writer = BufWriter::new(file);
+    serde_json::to_writer_pretty(writer, policy_document)?;
+    Ok(())
 }
 
 fn same_action_and_resource(
