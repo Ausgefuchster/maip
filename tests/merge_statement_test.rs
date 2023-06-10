@@ -1,4 +1,4 @@
-use maip::policy::{merge_statements, ConditionStatement, PolicyStatement};
+use maip::policy::{merge_statements, ConditionStatement, PolicyStatement, Condition};
 
 #[test]
 fn test_merge_allow_different_action_same_resource() {
@@ -6,13 +6,13 @@ fn test_merge_allow_different_action_same_resource() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["rds:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     let merged_statement = merge_statements(&first_statement, &second_statement);
 
@@ -22,7 +22,7 @@ fn test_merge_allow_different_action_same_resource() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string(), "rds:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     assert_eq!(merged_statement.unwrap(), expected_statement);
 }
@@ -33,13 +33,13 @@ fn test_merge_allow_same_action_different_resource_no_asterisk() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["arn:aws:ec2:us-east-1:123456789012:instance/*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["arn:aws:ec2:us-east-1:123456789012:volume/*".to_string()],
-        None,
+        Vec::new(),
     );
 
     let merged_statement = merge_statements(&first_statement, &second_statement);
@@ -51,7 +51,7 @@ fn test_merge_allow_same_action_different_resource_no_asterisk() {
             "arn:aws:ec2:us-east-1:123456789012:instance/*".to_string(),
             "arn:aws:ec2:us-east-1:123456789012:volume/*".to_string(),
         ],
-        None,
+        Vec::new(),
     );
     assert_eq!(merged_statement.unwrap(), expected_statement);
 }
@@ -62,13 +62,13 @@ fn test_merge_allow_different_action_and_resource() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["arn:aws:ec2:us-east-1:123456789012:instance/*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["rds:Describe*".to_string()],
         vec!["arn:aws:rds:us-east-1:123456789012:db/*".to_string()],
-        None,
+        Vec::new(),
     );
 
     let merged_statement = merge_statements(&first_statement, &second_statement);
@@ -82,14 +82,14 @@ fn test_merge_specific_resource_and_asterisk() {
         "Allow".to_string(),
         vec!["pi:*".to_string()],
         vec!["arn:aws:pi:*:*:metrics/rds/*".to_string()],
-        None,
+        Vec::new(),
     );
 
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["rds:*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
 
     let merged_statement = merge_statements(&first_statement, &second_statement);
@@ -101,13 +101,13 @@ fn test_merge_different_resource() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["arn:aws:ec2:us-east-1:123456789012:instance/*".to_string()],
-        None,
+        Vec::new(),
     );
     let merged_statement = merge_statements(&first_statement, &second_statement);
 
@@ -115,7 +115,7 @@ fn test_merge_different_resource() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     assert_eq!(merged_statement.unwrap(), expected_statement);
 }
@@ -126,13 +126,13 @@ fn test_merge_allow_and_deny_same() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Deny".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     let merged_statement = merge_statements(&first_statement, &second_statement);
 
@@ -140,7 +140,7 @@ fn test_merge_allow_and_deny_same() {
         "Deny".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     assert_eq!(merged_statement.unwrap(), expected_statement);
 }
@@ -151,13 +151,13 @@ fn test_merge_allow_and_deny_different() {
         "Allow".to_string(),
         vec!["ec2:*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Deny".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     let merged_statement = merge_statements(&first_statement, &second_statement);
 
@@ -170,13 +170,13 @@ fn test_merge_different_actions_and_resources() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string()],
         vec!["arn:aws:ec2:us-east-1:123456789012:instance/*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["ec2:*".to_string()],
         vec!["arn:aws:ec2:us-east-1:123456789012:volume/*".to_string()],
-        None,
+        Vec::new(),
     );
     let merged_statement = merge_statements(&first_statement, &second_statement);
 
@@ -189,13 +189,29 @@ fn test_merge_allow_all_same_with_condition() {
         "Allow".to_string(),
         vec!["ec2:*".to_string()],
         vec!["*".to_string()],
-        Some(ConditionStatement {}),
+        vec![ConditionStatement::new(
+            "StringEquals".to_string(),
+            vec![
+                Condition::new(
+                    "ec2:Region".to_string(),
+                    vec!["us-east-1".to_string()],
+                )
+            ]
+        )],
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["ec2:*".to_string()],
         vec!["*".to_string()],
-        Some(ConditionStatement {}),
+        vec![ConditionStatement::new(
+            "StringEquals".to_string(),
+            vec![
+                Condition::new(
+                    "ec2:Region".to_string(),
+                    vec!["us-east-1".to_string()],
+                )
+            ]
+        )],
     );
 
     let merged_statement = merge_statements(&first_statement, &second_statement);
@@ -208,13 +224,32 @@ fn test_merge_allow_all_same_one_has_condition() {
         "Allow".to_string(),
         vec!["ec2:*".to_string()],
         vec!["*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["ec2:*".to_string()],
         vec!["*".to_string()],
-        Some(ConditionStatement {}),
+        vec![
+            ConditionStatement::new(
+                "StringEquals".to_string(),
+                vec![
+                    Condition::new(
+                        "ec2:Region".to_string(),
+                        vec!["us-east-1".to_string()],
+                    )
+                ]
+            ),
+            ConditionStatement::new(
+                "StringEquals".to_string(),
+                vec![
+                    Condition::new(
+                        "ec2:Region".to_string(),
+                        vec!["us-east-2".to_string()],
+                    )
+                ]
+            ),
+        ],
     );
 
     let merged_statement = merge_statements(&first_statement, &second_statement);
@@ -227,13 +262,13 @@ fn test_merge_multiple_actions_same_resource() {
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string(), "ec2:Create*".to_string()],
         vec!["arn:aws:ec2:us-east-1:123456789012:instance/*".to_string()],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
         vec!["ec2:Describe*".to_string(), "ec2:Delete*".to_string()],
         vec!["arn:aws:ec2:us-east-1:123456789012:instance/*".to_string()],
-        None,
+        Vec::new(),
     );
 
     let merged_statement = merge_statements(&first_statement, &second_statement);
@@ -246,7 +281,7 @@ fn test_merge_multiple_actions_same_resource() {
             "ec2:Delete*".to_string(),
         ],
         vec!["arn:aws:ec2:us-east-1:123456789012:instance/*".to_string()],
-        None,
+        Vec::new(),
     );
     assert_eq!(merged_statement.unwrap(), expected_statement);
 }
@@ -260,7 +295,7 @@ fn merge_same_action_different_resources() {
             "arn:aws:ec2:us-east-1:123456789012:instance/*".to_string(),
             "arn:aws:ec2:us-east-1:123456789012:volume/*".to_string(),
         ],
-        None,
+        Vec::new(),
     );
     let second_statement = PolicyStatement::new(
         "Allow".to_string(),
@@ -269,7 +304,7 @@ fn merge_same_action_different_resources() {
             "arn:aws:ec2:us-east-1:123456789012:instance/*".to_string(),
             "arn:aws:ec2:us-east-1:123456789012:subnet/*".to_string(),
         ],
-        None,
+        Vec::new(),
     );
 
     let merged_statement = merge_statements(&first_statement, &second_statement);
@@ -282,7 +317,7 @@ fn merge_same_action_different_resources() {
             "arn:aws:ec2:us-east-1:123456789012:volume/*".to_string(),
             "arn:aws:ec2:us-east-1:123456789012:subnet/*".to_string(),
         ],
-        None,
+        Vec::new(),
     );
     assert_eq!(merged_statement.unwrap(), expected_statement);
 }

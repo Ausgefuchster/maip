@@ -1,6 +1,8 @@
 use std::fs::read_to_string;
 
-use maip::policy::{merge_policy_documents, ConditionStatement, PolicyDocument, PolicyStatement};
+use maip::policy::{
+    merge_policy_documents, Condition, ConditionStatement, PolicyDocument, PolicyStatement,
+};
 
 #[test]
 fn test_merge_ec2_and_rds_policy() {
@@ -58,7 +60,7 @@ fn test_merge_ec2_and_rds_policy() {
                     "sns:Publish".to_string(),
                 ],
                 vec!["*".to_string()],
-                None,
+                Vec::new(),
             ),
             PolicyStatement::new(
                 "Allow".to_string(),
@@ -67,25 +69,59 @@ fn test_merge_ec2_and_rds_policy() {
                     "devops-guru:SearchInsights".to_string(),
                 ],
                 vec!["*".to_string()],
-                Some(ConditionStatement {}),
+                vec![
+                    ConditionStatement::new(
+                        "ForAllValues:StringEquals".to_string(),
+                        vec![Condition::new(
+                            "devops-guru:ServicesNamaes".to_string(),
+                            vec!["RDS".to_string()],
+                        )],
+                    ),
+                    ConditionStatement::new(
+                        "Null".to_string(),
+                        vec![Condition::new(
+                            "devops-guru:ServicesNamaes".to_string(),
+                            vec!["false".to_string()],
+                        )],
+                    ),
+                ],
             ),
             PolicyStatement::new(
                 "Allow".to_string(),
                 vec!["iam:CreateServiceLinkedRole".to_string()],
                 vec!["*".to_string()],
-                Some(ConditionStatement {}),
+                vec![ConditionStatement::new(
+                    "StringLike".to_string(),
+                    vec![Condition::new(
+                        "iam:AWSServiceName".to_string(),
+                        vec!["rds.application-autoscaling.amazonaws.com".to_string()],
+                    )],
+                )],
             ),
             PolicyStatement::new(
                 "Allow".to_string(),
                 vec!["iam:CreateServiceLinkedRole".to_string()],
                 vec!["*".to_string()],
-                Some(ConditionStatement {}),
+                vec![ConditionStatement::new(
+                    "StringLike".to_string(),
+                    vec![Condition::new(
+                        "iam:AWSServiceName".to_string(),
+                        vec![
+                            "autoscaling.amazonaws.com".to_string(),
+                            "ec2scheduled.amazonaws.com".to_string(),
+                            "elasticloadbalancing.amazonaws.com".to_string(),
+                            "spot.amazonaws.com".to_string(),
+                            "spotfleet.amazonaws.com".to_string(),
+                            "transitgateway.amazonaws.com".to_string(),
+                        ],
+                    )],
+                )],
             ),
             PolicyStatement::new(
                 "Allow".to_string(),
                 vec!["pi:*".to_string()],
                 vec!["arn:aws:pi:*:*:metrics/rds/*".to_string()],
-                None,
+                Vec::new(),
             ),
         ],
     );

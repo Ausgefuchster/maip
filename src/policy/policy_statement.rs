@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::json_string_or_vec::string_or_seq_string;
 
-use super::merge::Merge;
+use super::{merge::Merge, ConditionStatement};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "PascalCase")]
@@ -15,8 +15,8 @@ pub struct PolicyStatement {
     #[serde(deserialize_with = "string_or_seq_string")]
     pub resource: Vec<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    condition: Option<ConditionStatement>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    condition: Vec<ConditionStatement>,
 }
 
 impl PolicyStatement {
@@ -24,7 +24,7 @@ impl PolicyStatement {
         effect: String,
         action: Vec<String>,
         resource: Vec<String>,
-        condition: Option<ConditionStatement>,
+        condition: Vec<ConditionStatement>,
     ) -> Self {
         Self {
             effect,
@@ -35,14 +35,11 @@ impl PolicyStatement {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct ConditionStatement {}
-
 pub fn merge_statements(
     first_statement: &PolicyStatement,
     second_statement: &PolicyStatement,
 ) -> Option<PolicyStatement> {
-    if first_statement.condition.is_some() || second_statement.condition.is_some() {
+    if !first_statement.condition.is_empty() || !second_statement.condition.is_empty() {
         return None;
     }
 
