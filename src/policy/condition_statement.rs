@@ -92,6 +92,7 @@ impl Serialize for Condition {
         map.end()
     }
 }
+
 #[cfg(test)]
 mod deserialize_tests {
     use super::*;
@@ -129,6 +130,28 @@ mod deserialize_tests {
         );
         assert_eq!(condition_statement, expected);
     }
+
+    #[test]
+    fn test_deserialize_condition_statement_one_value() {
+        let json = r#"
+        {
+            "StringEquals": {
+                "iam:AWSServiceName": "autoscaling.amazonaws.com",
+            }
+        }
+        "#;
+
+        let condition_statement: ConditionStatement = serde_json::from_str(json).unwrap();
+
+        let expected = ConditionStatement::new(
+            "StringEquals".to_string(),
+            vec![Condition::new(
+                "iam:AWSServiceName".to_string(),
+                vec!["autoscaling.amazonaws.com".to_string()],
+            )],
+        );
+        assert_eq!(condition_statement, expected);
+    }
 }
 
 #[cfg(test)]
@@ -157,6 +180,24 @@ mod tests {
         assert_eq!(
             json,
             r#"{"StringEquals":{"iam:AWSServiceName":["autoscaling.amazonaws.com","ec2scheduled.amazonaws.com","elasticloadbalancing.amazonaws.com","spot.amazonaws.com","spotfleet.amazonaws.com","transitgateway.amazonaws.com"]}}"#
+        );
+    }
+
+    #[test]
+    fn test_serialize_condition_one_value() {
+        let condition_statement = ConditionStatement::new(
+            "StringEquals".to_string(),
+            vec![Condition::new(
+                "iam:AWSServiceName".to_string(),
+                vec!["autoscaling.amazonaws.com".to_string()],
+            )],
+        );
+
+        let json = serde_json::to_string(&condition_statement).unwrap();
+
+        assert_eq!(
+            json,
+            r#"{"StringEquals":{"iam:AWSServiceName":"autoscaling.amazonaws.com"}}"#
         );
     }
 }
