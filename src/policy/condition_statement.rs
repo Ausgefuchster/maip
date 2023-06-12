@@ -90,7 +90,11 @@ impl Serialize for Condition {
     {
         let mut map = serializer.serialize_map(None)?;
         map.serialize_key(&self.condition_key)?;
-        map.serialize_value(&self.condition_value)?;
+        if self.condition_value.len() == 1 {
+            map.serialize_value(&self.condition_value[0])?;
+        } else {
+            map.serialize_value(&self.condition_value)?;
+        }
         map.end()
     }
 }
