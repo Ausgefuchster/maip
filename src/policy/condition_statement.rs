@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize};
+use serde_json::Value;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ConditionStatement {
@@ -40,10 +41,11 @@ impl<'de> serde::de::Visitor<'de> for ConditionStatementVisitor {
         V: serde::de::MapAccess<'de>,
     {
         let condition_operator = map.next_key::<String>()?.unwrap();
-        let condition_object = map.next_value::<HashMap<String, Vec<String>>>()?;
+        let condition_object = map.next_value::<HashMap<String, Value>>()?;
+
         let conditions: Vec<Condition> = condition_object
             .iter()
-            .map(|(k, v)| Condition::new(k.clone(), v.clone()))
+            .map(|(k, v)| condition_from_key_and_value(k, v))
             .collect();
 
         Ok(ConditionStatement::new(condition_operator, conditions))
@@ -93,6 +95,20 @@ impl Serialize for Condition {
     }
 }
 
+fn condition_from_key_and_value(key: &str, value: &Value) -> Condition {
+    if let Some(value) = value.as_array() {
+        Condition::new(
+            key.to_string(),
+            value
+                .iter()
+                .map(|v| v.as_str().unwrap().to_string())
+                .collect(),
+        )
+    } else {
+        Condition::new(key.to_string(), vec![value.as_str().unwrap().to_string()])
+    }
+}
+
 #[cfg(test)]
 mod deserialize_tests {
     use super::*;
@@ -136,7 +152,7 @@ mod deserialize_tests {
         let json = r#"
         {
             "StringEquals": {
-                "iam:AWSServiceName": "autoscaling.amazonaws.com",
+                "iam:AWSServiceName": "autoscaling.amazonaws.com"
             }
         }
         "#;
