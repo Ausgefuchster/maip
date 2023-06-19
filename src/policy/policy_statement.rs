@@ -1,10 +1,9 @@
-use serde::{Serialize, Deserialize};
-
-use crate::json_string_or_vec::string_or_seq_string;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use super::{merge::Merge, ConditionStatement};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct PolicyStatement {
     pub effect: String,
@@ -33,6 +32,91 @@ impl PolicyStatement {
             condition,
         }
     }
+}
+
+impl<'de> Deserialize<'de> for PolicyStatement {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_any(PolicyStatementVisitor)
+    }
+}
+
+struct PolicyStatementVisitor;
+
+impl<'de> serde::de::Visitor<'de> for PolicyStatementVisitor {
+    type Value = PolicyStatement;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a policy statement")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        let mut effect = None;
+        let mut action = None;
+        let mut resource = None;
+        let mut condition = None;
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "Effect" => {
+                    effect = Some(map.next_value::<String>()?);
+                }
+                "Action" => {
+                    let value = map.next_value::<Value>().unwrap();
+                    action = Some(get_value_as_vec(&value));
+                }
+                "Resource" => {
+                    let value = map.next_value::<Value>().unwrap();
+                    resource = Some(get_value_as_vec(&value));
+                }
+                "Condition" => {
+                    let mut conditions = Vec::<ConditionStatement>::new();
+                    let mut next_value = map.next_value::<ConditionStatement>();
+                    while next_value.is_ok() {
+                        println!("next_value: {:?}", next_value);
+                        conditions.push(next_value?);
+                        next_value = map.next_value::<ConditionStatement>();
+                    }
+                    println!("{}", next_value.unwrap_err());
+                    condition = Some(conditions);
+                }
+                _ => {
+                    println!("Unknown key: {}", key);
+                    return Err(serde::de::Error::unknown_field(&key, &[]));
+                }
+            }
+        }
+
+        let effect = effect.ok_or_else(|| serde::de::Error::missing_field("Effect"))?;
+        let action = action.ok_or_else(|| serde::de::Error::missing_field("Action"))?;
+        let resource = resource.ok_or_else(|| serde::de::Error::missing_field("Resource"))?;
+        let condition = condition.unwrap_or_default();
+
+        Ok(PolicyStatement {
+            effect,
+            action,
+            resource,
+            condition,
+        })
+    }
+}
+
+fn get_value_as_vec(value: &Value) -> Vec<String> {
+    if value.is_array() {
+        return value
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_str().unwrap().to_owned())
+            .collect::<Vec<String>>();
+    }
+
+    vec![value.as_str().unwrap().to_owned()]
 }
 
 pub fn merge_statements(

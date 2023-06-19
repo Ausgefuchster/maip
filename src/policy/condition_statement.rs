@@ -41,6 +41,7 @@ impl<'de> serde::de::Visitor<'de> for ConditionStatementVisitor {
         V: serde::de::MapAccess<'de>,
     {
         let condition_operator = map.next_key::<String>()?.unwrap();
+        println!("condition_operator: {}", condition_operator);
         let condition_object = map.next_value::<HashMap<String, Value>>()?;
 
         let conditions: Vec<Condition> = condition_object
