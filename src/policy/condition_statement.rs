@@ -1,7 +1,5 @@
 use serde::{ser::SerializeMap, Serialize};
 
-use super::merge::Merge;
-
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct ConditionStatement {
     condition_operator: String,
