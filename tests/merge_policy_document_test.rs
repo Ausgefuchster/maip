@@ -73,14 +73,14 @@ fn test_merge_ec2_and_rds_policy() {
                     ConditionStatement::new(
                         "ForAllValues:StringEquals".to_string(),
                         vec![Condition::new(
-                            "devops-guru:ServicesNamaes".to_string(),
+                            "devops-guru:ServiceNames".to_string(),
                             vec!["RDS".to_string()],
                         )],
                     ),
                     ConditionStatement::new(
                         "Null".to_string(),
                         vec![Condition::new(
-                            "devops-guru:ServicesNamaes".to_string(),
+                            "devops-guru:ServiceNames".to_string(),
                             vec!["false".to_string()],
                         )],
                     ),
@@ -125,6 +125,9 @@ fn test_merge_ec2_and_rds_policy() {
             ),
         ],
     );
+
+    println!("merged_policy_document: {:#?}", merged_policy_document);
+    println!("expected_policy_document: {:#?}", expected_policy_document);
 
     assert_eq!(merged_policy_document.unwrap(), expected_policy_document);
 }

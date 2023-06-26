@@ -1,7 +1,9 @@
-use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+use serde::{de::Error, Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{merge::Merge, ConditionStatement};
+use super::{merge::Merge, Condition, ConditionStatement};
 
 #[derive(Serialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "PascalCase")]
@@ -67,34 +69,46 @@ impl<'de> serde::de::Visitor<'de> for PolicyStatementVisitor {
                     effect = Some(map.next_value::<String>()?);
                 }
                 "Action" => {
-                    let value = map.next_value::<Value>().unwrap();
+                    let value: Value = map.next_value().unwrap();
                     action = Some(get_value_as_vec(&value));
                 }
                 "Resource" => {
-                    let value = map.next_value::<Value>().unwrap();
+                    let value: Value = map.next_value().unwrap();
                     resource = Some(get_value_as_vec(&value));
                 }
                 "Condition" => {
-                    let mut conditions = Vec::<ConditionStatement>::new();
-                    let mut next_value = map.next_value::<ConditionStatement>();
-                    while next_value.is_ok() {
-                        println!("next_value: {:?}", next_value);
-                        conditions.push(next_value?);
-                        next_value = map.next_value::<ConditionStatement>();
-                    }
-                    println!("{}", next_value.unwrap_err());
+                    let conditions = map
+                        .next_value::<HashMap<String, HashMap<String, Value>>>()?
+                        .iter()
+                        .map(|(key, condition)| {
+                            (
+                                key,
+                                condition
+                                    .iter()
+                                    .map(|(condition_key, condition_value)| {
+                                        Condition::new(
+                                            condition_key.to_owned(),
+                                            get_value_as_vec(condition_value),
+                                        )
+                                    })
+                                    .collect::<Vec<Condition>>(),
+                            )
+                        })
+                        .map(|(operator, condition)| {
+                            ConditionStatement::new(operator.to_owned(), condition)
+                        })
+                        .collect::<Vec<ConditionStatement>>();
                     condition = Some(conditions);
                 }
                 _ => {
-                    println!("Unknown key: {}", key);
-                    return Err(serde::de::Error::unknown_field(&key, &[]));
+                    return Err(Error::unknown_field(&key, &[]));
                 }
             }
         }
 
-        let effect = effect.ok_or_else(|| serde::de::Error::missing_field("Effect"))?;
-        let action = action.ok_or_else(|| serde::de::Error::missing_field("Action"))?;
-        let resource = resource.ok_or_else(|| serde::de::Error::missing_field("Resource"))?;
+        let effect = effect.ok_or_else(|| Error::missing_field("Effect"))?;
+        let action = action.ok_or_else(|| Error::missing_field("Action"))?;
+        let resource = resource.ok_or_else(|| Error::missing_field("Resource"))?;
         let condition = condition.unwrap_or_default();
 
         Ok(PolicyStatement {
@@ -107,16 +121,14 @@ impl<'de> serde::de::Visitor<'de> for PolicyStatementVisitor {
 }
 
 fn get_value_as_vec(value: &Value) -> Vec<String> {
-    if value.is_array() {
-        return value
-            .as_array()
-            .unwrap()
+    match value {
+        Value::Array(array) => array
             .iter()
             .map(|v| v.as_str().unwrap().to_owned())
-            .collect::<Vec<String>>();
+            .collect::<Vec<String>>(),
+        Value::String(string) => vec![string.to_owned()],
+        _ => panic!("Invalid value type"),
     }
-
-    vec![value.as_str().unwrap().to_owned()]
 }
 
 pub fn merge_statements(
