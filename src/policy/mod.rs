@@ -2,6 +2,7 @@ mod condition_statement;
 mod merge;
 mod policy_document;
 mod policy_statement;
+mod policy_statement_serde;
 
 pub use policy_document::merge_policy_documents;
 pub use policy_document::policy_from_file;
