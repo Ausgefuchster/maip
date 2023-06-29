@@ -1,4 +1,5 @@
 mod condition_statement;
+mod condition_statement_serde;
 mod merge;
 mod policy_document;
 mod policy_statement;

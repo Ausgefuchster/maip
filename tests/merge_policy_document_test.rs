@@ -94,18 +94,6 @@ fn test_merge_ec2_and_rds_policy() {
                     "StringLike".to_string(),
                     vec![Condition::new(
                         "iam:AWSServiceName".to_string(),
-                        vec!["rds.application-autoscaling.amazonaws.com".to_string()],
-                    )],
-                )],
-            ),
-            PolicyStatement::new(
-                "Allow".to_string(),
-                vec!["iam:CreateServiceLinkedRole".to_string()],
-                vec!["*".to_string()],
-                vec![ConditionStatement::new(
-                    "StringLike".to_string(),
-                    vec![Condition::new(
-                        "iam:AWSServiceName".to_string(),
                         vec![
                             "autoscaling.amazonaws.com".to_string(),
                             "ec2scheduled.amazonaws.com".to_string(),
@@ -113,6 +101,7 @@ fn test_merge_ec2_and_rds_policy() {
                             "spot.amazonaws.com".to_string(),
                             "spotfleet.amazonaws.com".to_string(),
                             "transitgateway.amazonaws.com".to_string(),
+                            "rds.application-autoscaling.amazonaws.com".to_string(),
                         ],
                     )],
                 )],
