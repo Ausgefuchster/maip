@@ -1,4 +1,4 @@
-use maip::policy::{merge_statements, ConditionStatement, PolicyStatement, Condition};
+use maip::policy::{merge_statements, Condition, ConditionStatement, PolicyStatement};
 
 #[test]
 fn test_merge_allow_different_action_same_resource() {
@@ -191,12 +191,10 @@ fn test_merge_allow_all_same_with_condition() {
         vec!["*".to_string()],
         vec![ConditionStatement::new(
             "StringEquals".to_string(),
-            vec![
-                Condition::new(
-                    "ec2:Region".to_string(),
-                    vec!["us-east-1".to_string()],
-                )
-            ]
+            vec![Condition::new(
+                "ec2:Region".to_string(),
+                vec!["us-east-1".to_string()],
+            )],
         )],
     );
     let second_statement = PolicyStatement::new(
@@ -205,12 +203,10 @@ fn test_merge_allow_all_same_with_condition() {
         vec!["*".to_string()],
         vec![ConditionStatement::new(
             "StringEquals".to_string(),
-            vec![
-                Condition::new(
-                    "ec2:Region".to_string(),
-                    vec!["us-east-1".to_string()],
-                )
-            ]
+            vec![Condition::new(
+                "ec2:Region".to_string(),
+                vec!["us-east-1".to_string()],
+            )],
         )],
     );
 
@@ -233,21 +229,17 @@ fn test_merge_allow_all_same_one_has_condition() {
         vec![
             ConditionStatement::new(
                 "StringEquals".to_string(),
-                vec![
-                    Condition::new(
-                        "ec2:Region".to_string(),
-                        vec!["us-east-1".to_string()],
-                    )
-                ]
+                vec![Condition::new(
+                    "ec2:Region".to_string(),
+                    vec!["us-east-1".to_string()],
+                )],
             ),
             ConditionStatement::new(
                 "StringEquals".to_string(),
-                vec![
-                    Condition::new(
-                        "ec2:Region".to_string(),
-                        vec!["us-east-2".to_string()],
-                    )
-                ]
+                vec![Condition::new(
+                    "ec2:Region".to_string(),
+                    vec!["us-east-2".to_string()],
+                )],
             ),
         ],
     );

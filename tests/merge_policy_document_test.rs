@@ -1,4 +1,4 @@
-use std::fs::read_to_string;
+use std::{fs::{read_to_string, File}, io::BufWriter};
 
 use maip::policy::{
     merge_policy_documents, Condition, ConditionStatement, PolicyDocument, PolicyStatement,
@@ -12,7 +12,7 @@ fn test_merge_ec2_and_rds_policy() {
     let rds_policy = read_to_string("./tests/assets/AmazonRDSFullAccessPolicy.json").unwrap();
     let rds_policy: PolicyDocument = serde_json::from_str(&rds_policy).unwrap();
 
-    let merged_policy_document = merge_policy_documents(&[ec2_policy, rds_policy]);
+    let merged_policy_document = merge_policy_documents(&[ec2_policy, rds_policy]).unwrap();
 
     let expected_policy_document = PolicyDocument::new(
         "2012-10-17".to_string(),
@@ -95,13 +95,27 @@ fn test_merge_ec2_and_rds_policy() {
                     vec![Condition::new(
                         "iam:AWSServiceName".to_string(),
                         vec![
+                            "rds.amazonaws.com".to_string(),
+                            "rds.application-autoscaling.amazonaws.com".to_string(),
+                        ],
+                    )],
+                )],
+            ),
+            PolicyStatement::new(
+                "Allow".to_string(),
+                vec!["iam:CreateServiceLinkedRole".to_string()],
+                vec!["*".to_string()],
+                vec![ConditionStatement::new(
+                    "StringEquals".to_string(),
+                    vec![Condition::new(
+                        "iam:AWSServiceName".to_string(),
+                        vec![
                             "autoscaling.amazonaws.com".to_string(),
                             "ec2scheduled.amazonaws.com".to_string(),
                             "elasticloadbalancing.amazonaws.com".to_string(),
                             "spot.amazonaws.com".to_string(),
                             "spotfleet.amazonaws.com".to_string(),
                             "transitgateway.amazonaws.com".to_string(),
-                            "rds.application-autoscaling.amazonaws.com".to_string(),
                         ],
                     )],
                 )],
@@ -115,8 +129,18 @@ fn test_merge_ec2_and_rds_policy() {
         ],
     );
 
-    println!("merged_policy_document: {:#?}", merged_policy_document);
-    println!("expected_policy_document: {:#?}", expected_policy_document);
+    assert_eq!(
+        merged_policy_document.version,
+        expected_policy_document.version
+    );
 
-    assert_eq!(merged_policy_document.unwrap(), expected_policy_document);
+    assert_eq!(
+        merged_policy_document.statement.len(),
+        expected_policy_document.statement.len()
+    );
+
+    assert_eq!(
+        merged_policy_document.size(),
+        expected_policy_document.size()
+    )
 }

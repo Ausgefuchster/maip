@@ -1,19 +1,28 @@
-use std::{io::{BufReader, BufWriter}, fs::File, error::Error};
+use std::{
+    error::Error,
+    fs::File,
+    io::{BufReader, BufWriter},
+};
 
 use serde::{Deserialize, Serialize};
 
-use super::policy_statement::{PolicyStatement, merge_statements};
+use super::policy_statement::{merge_statements, PolicyStatement};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct PolicyDocument {
-    version: String,
+    pub version: String,
     pub statement: Vec<PolicyStatement>,
 }
 
 impl PolicyDocument {
     pub fn new(version: String, statement: Vec<PolicyStatement>) -> Self {
         Self { version, statement }
+    }
+
+    /// Returns the number of characters in the policy document
+    pub fn size(&self) -> usize {
+        serde_json::to_string(self).unwrap().len()
     }
 
     /// Sorts the statements by effect
