@@ -1,4 +1,4 @@
-use std::{fs::{read_to_string, File}, io::BufWriter};
+use std::{fs::{read_to_string}};
 
 use maip::policy::{
     merge_policy_documents, Condition, ConditionStatement, PolicyDocument, PolicyStatement,

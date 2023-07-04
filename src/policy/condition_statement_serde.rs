@@ -8,7 +8,7 @@ impl Serialize for ConditionStatement {
         S: serde::Serializer,
     {
         let mut map = serializer.serialize_map(None)?;
-        map.serialize_key(&self.condition_operator)?;
+        map.serialize_key(&self.operator)?;
 
         self.conditions
             .iter()
@@ -24,11 +24,11 @@ impl Serialize for Condition {
         S: serde::Serializer,
     {
         let mut map = serializer.serialize_map(None)?;
-        map.serialize_key(&self.condition_key)?;
-        if self.condition_value.len() == 1 {
-            map.serialize_value(&self.condition_value[0])?;
+        map.serialize_key(&self.key)?;
+        if self.values.len() == 1 {
+            map.serialize_value(&self.values[0])?;
         } else {
-            map.serialize_value(&self.condition_value)?;
+            map.serialize_value(&self.values)?;
         }
         map.end()
     }

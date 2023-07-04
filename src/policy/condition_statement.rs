@@ -1,13 +1,13 @@
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct ConditionStatement {
-    pub condition_operator: String,
+    pub operator: String,
     pub conditions: Vec<Condition>,
 }
 
 impl ConditionStatement {
-    pub fn new(condition_operator: String, conditions: Vec<Condition>) -> Self {
+    pub fn new(operator: String, conditions: Vec<Condition>) -> Self {
         Self {
-            condition_operator,
+            operator,
             conditions,
         }
     }
@@ -15,15 +15,15 @@ impl ConditionStatement {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Condition {
-    pub condition_key: String,
-    pub condition_value: Vec<String>,
+    pub key: String,
+    pub values: Vec<String>,
 }
 
 impl Condition {
     pub fn new(condition_key: String, condition_value: Vec<String>) -> Self {
         Self {
-            condition_key,
-            condition_value,
+            key: condition_key,
+            values: condition_value,
         }
     }
 }
