@@ -1,3 +1,5 @@
+use std::env;
+
 use maip::cli::CLI;
 
 fn main() {
