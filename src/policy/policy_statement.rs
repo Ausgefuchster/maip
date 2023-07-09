@@ -56,9 +56,8 @@ pub fn merge_statements(
     let first_action = &first_statement.action;
     let second_action = &second_statement.action;
 
-    let asterik = get_asterisk(first_resource, second_resource);
     if first_action == second_action {
-        if let Some(asterisk) = asterik {
+        if let Some(asterisk) = get_asterisk(first_resource, second_resource) {
             merged_statement.resource = vec![asterisk];
             return Some(merged_statement);
         }
@@ -66,7 +65,7 @@ pub fn merge_statements(
         return Some(merged_statement);
     }
 
-    if can_merge_resources(first_resource, second_resource) {
+    if first_resource == second_resource {
         merged_statement.action.merge(second_action.clone());
         merged_statement.resource.merge(second_resource.clone());
         return Some(merged_statement);
@@ -89,10 +88,6 @@ fn as_deny_statement(statement: &PolicyStatement) -> Option<PolicyStatement> {
         statement.resource.clone(),
         statement.condition.clone(),
     ))
-}
-
-fn can_merge_resources(first_resources: &[String], second_resources: &[String]) -> bool {
-    first_resources == second_resources
 }
 
 fn get_asterisk(first_resources: &[String], second_resources: &[String]) -> Option<String> {
