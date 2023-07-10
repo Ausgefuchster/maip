@@ -52,10 +52,10 @@ impl CLI {
     }
 }
 
-fn parse_option_args(args: &Vec<String>) -> Result<HashMap<String, String>, String> {
+fn parse_option_args(args: &[String]) -> Result<HashMap<String, String>, String> {
     args.iter()
         .enumerate()
-        .filter(|(_, v)| v.starts_with("--") || v.starts_with("-"))
+        .filter(|(_, v)| v.starts_with("--") || v.starts_with('-'))
         .map(|(i, v)| {
             get_equals_pair(v)
                 .or(get_index_pair(i, args))
@@ -65,12 +65,12 @@ fn parse_option_args(args: &Vec<String>) -> Result<HashMap<String, String>, Stri
 }
 
 fn get_equals_pair(key: &str) -> Option<(String, String)> {
-    let (key, value) = key.split_once("=")?;
+    let (key, value) = key.split_once('=')?;
     let key = remove_prefix(key);
     Some((key.to_string(), value.to_string()))
 }
 
-fn get_index_pair(key_index: usize, args: &Vec<String>) -> Option<(String, String)> {
+fn get_index_pair(key_index: usize, args: &[String]) -> Option<(String, String)> {
     let value = args.get(key_index + 1)?;
     let key = remove_prefix(args[key_index].as_str());
     Some((key.to_string(), value.to_string()))
@@ -79,7 +79,7 @@ fn get_index_pair(key_index: usize, args: &Vec<String>) -> Option<(String, Strin
 fn remove_prefix(key: &str) -> &str {
     match key {
         key if key.starts_with("--") => key.trim_start_matches("--"),
-        key if key.starts_with("-") => key.trim_start_matches("-"),
+        key if key.starts_with('-') => key.trim_start_matches('-'),
         _ => key,
     }
 }
