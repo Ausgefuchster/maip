@@ -11,5 +11,5 @@ pub trait Command: Arguments {
 }
 
 pub trait Arguments {
-    fn set_values(&mut self, args: &HashMap<String, String>) -> Result<(), String>;
+    fn set_values(&mut self, args: &HashMap<String, Vec<String>>) -> Result<(), String>;
 }

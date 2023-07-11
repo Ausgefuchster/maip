@@ -52,16 +52,28 @@ impl CLI {
     }
 }
 
-fn parse_option_args(args: &[String]) -> Result<HashMap<String, String>, String> {
-    args.iter()
-        .enumerate()
-        .filter(|(_, v)| v.starts_with("--") || v.starts_with('-'))
-        .map(|(i, v)| {
-            get_equals_pair(v)
-                .or(get_index_pair(i, args))
-                .ok_or(format!("Missing value for key: {}", args[i]))
-        })
-        .collect()
+fn parse_option_args(args: &[String]) -> Result<HashMap<String, Vec<String>>, String> {
+    let mut option_args: HashMap<String, Vec<String>> = HashMap::new();
+    for (i, arg) in args.iter().enumerate() {
+        if !arg.starts_with("--") {
+            continue;
+        }
+
+        let (key, value) = get_equals_pair(arg)
+            .or(get_index_pair(i, args))
+            .ok_or(format!("Missing value for key: {}", args[i]))?;
+
+        push_to_value_if_present(&mut option_args, key, value);
+    }
+    Ok(option_args)
+}
+
+fn push_to_value_if_present(option_args: &mut HashMap<String, Vec<String>>, key: String, value: String) {
+    if let Some(values) = option_args.get_mut(&key) {
+        values.push(value);
+    } else {
+        option_args.insert(key, vec![value]);
+    }
 }
 
 fn get_equals_pair(key: &str) -> Option<(String, String)> {
@@ -79,7 +91,6 @@ fn get_index_pair(key_index: usize, args: &[String]) -> Option<(String, String)>
 fn remove_prefix(key: &str) -> &str {
     match key {
         key if key.starts_with("--") => key.trim_start_matches("--"),
-        key if key.starts_with('-') => key.trim_start_matches('-'),
         _ => key,
     }
 }
@@ -91,16 +102,12 @@ mod tests {
         let args = vec![
             String::from("--key=value"),
             String::from("--key"),
-            String::from("value"),
-            String::from("-k=value"),
-            String::from("-k"),
-            String::from("value"),
+            String::from("value")
         ];
 
         let result = super::parse_option_args(&args).unwrap();
 
-        assert_eq!(result.get("key").unwrap(), "value");
-        assert_eq!(result.get("k").unwrap(), "value");
+        assert_eq!(result.get("key").unwrap(), &vec!["value", "value"]);
     }
 
     #[test]
