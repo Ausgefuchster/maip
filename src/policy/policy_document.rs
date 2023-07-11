@@ -1,10 +1,10 @@
 use std::{
-    error::Error,
     fs::File,
     io::{BufReader, BufWriter},
 };
 
 use serde::{Deserialize, Serialize};
+use serde_json::{from_reader, to_writer_pretty};
 
 use super::policy_statement::{merge_statements, PolicyStatement};
 
@@ -76,16 +76,16 @@ pub fn merge_policy_document_statements(document: &mut PolicyDocument) {
     document.statement = merged_statements;
 }
 
-pub fn policy_from_file(file: &str) -> Result<PolicyDocument, Box<dyn Error>> {
-    let file = File::open(file)?;
+pub fn policy_from_file(file: &str) -> Result<PolicyDocument, String> {
+    let file = File::open(file).map_err(|e| e.to_string())?;
     let reader = BufReader::new(file);
-    let policy_document: PolicyDocument = serde_json::from_reader(reader)?;
+    let policy_document: PolicyDocument = from_reader(reader).map_err(|e| e.to_string())?;
     Ok(policy_document)
 }
 
-pub fn policy_to_file(file: &str, policy_document: &PolicyDocument) -> Result<(), Box<dyn Error>> {
-    let file = File::create(file)?;
+pub fn policy_to_file(file: &str, policy_document: &PolicyDocument) -> Result<(), String> {
+    let file = File::create(file).map_err(|e| e.to_string())?;
     let writer = BufWriter::new(file);
-    serde_json::to_writer_pretty(writer, policy_document)?;
+    to_writer_pretty(writer, policy_document).map_err(|e| e.to_string())?;
     Ok(())
 }
