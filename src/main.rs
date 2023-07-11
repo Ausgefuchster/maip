@@ -1,9 +1,13 @@
 use std::env;
 
 use maip::cli::CLI;
+use maip::cli::commands::Merge;
 
 fn main() {
-    let mut cli = CLI::build().description("maip").version("0.1.0");
+    let mut cli = CLI::build()
+        .description("maip")
+        .version("0.1.0")
+        .command(Merge::default());
 
     let args = get_args();
 
