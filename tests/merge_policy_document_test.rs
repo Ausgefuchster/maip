@@ -12,7 +12,7 @@ fn test_merge_ec2_and_rds_policy() {
     let rds_policy = read_to_string("./tests/assets/AmazonRDSFullAccessPolicy.json").unwrap();
     let rds_policy: PolicyDocument = serde_json::from_str(&rds_policy).unwrap();
 
-    let merged_policy_document = merge_policy_documents(&[ec2_policy, rds_policy]).unwrap();
+    let merged_policy_document = merge_policy_documents(&[ec2_policy, rds_policy]);
 
     let expected_policy_document = PolicyDocument::new(
         "2012-10-17".to_string(),
