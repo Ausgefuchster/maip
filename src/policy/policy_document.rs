@@ -33,7 +33,7 @@ impl PolicyDocument {
     }
 }
 
-pub fn merge_policy_documents(documents: &[PolicyDocument]) -> Option<PolicyDocument> {
+pub fn merge_policy_documents(documents: &[PolicyDocument]) -> PolicyDocument {
     assert!(
         documents.iter().all(|d| d.version == "2012-10-17"),
         "Only version 2012-10-17 is supported"
@@ -50,7 +50,7 @@ pub fn merge_policy_documents(documents: &[PolicyDocument]) -> Option<PolicyDocu
     merge_policy_document_statements(&mut new_document);
 
     new_document.sort();
-    Some(new_document)
+    new_document
 }
 
 pub fn merge_policy_document_statements(document: &mut PolicyDocument) {
