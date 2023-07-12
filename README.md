@@ -9,7 +9,7 @@ this tool can be used to merge multiple policies into one.
 ## 📖 Usage 
 
 ```
-maip merge <output file> <input file 1> <input file 2> ...
+maip merge --out <output file> --file <input file 1> --file <input file 2> ...
 ```
 
 You can provide as many input files as you want. 
