@@ -5,13 +5,22 @@ use std::collections::HashMap;
 #[derive(Default)]
 pub struct Merge {
     files: Vec<String>,
-    output: String,
+    out: String,
 }
 
 impl Arguments for Merge {
-    fn set_values(&mut self, args: &HashMap<String, Vec<String>>) -> Result<(), String> {
-        self.files = args.get("file").ok_or("Missing argument: file")?.clone();
-        self.output = args.get("output").ok_or("Missing argument: output")?[0].to_string();
+    fn set_option_args(&mut self, args: &HashMap<String, Vec<String>>) -> Result<(), String> {
+        self.out = args
+            .get("out")
+            .unwrap_or(&vec!["merged.json".to_string()])
+            .get(0)
+            .ok_or("Missing value for --out option".to_string())?
+            .to_string();
+        Ok(())
+    }
+
+    fn set_positional_args(&mut self, args: &[String]) -> Result<(), String> {
+        self.files = args.to_vec();
         Ok(())
     }
 }
@@ -25,7 +34,7 @@ impl Command for Merge {
             .collect::<Result<Vec<PolicyDocument>, String>>()?;
         let result = merge_policy_documents(&documents);
 
-        policy_to_file(self.output.as_str(), &result)?;
+        policy_to_file(self.out.as_str(), &result)?;
         Ok(())
     }
 
@@ -38,9 +47,6 @@ impl Command for Merge {
     }
 
     fn optional_args(&self) -> Vec<String> {
-        vec![
-            "file".to_string(),
-            "output".to_string(),
-        ]
+        vec!["file".to_string(), "out".to_string()]
     }
 }
