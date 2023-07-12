@@ -41,7 +41,7 @@ impl CLI {
                 .find(|c| c.name() == command)
                 .ok_or(format!("Command not found: {}", command))?;
 
-            command.set_values(&option_args)?;
+            command.set_option_args(&option_args)?;
             command.run(args[1..].to_vec())?;
 
             return Ok(());
