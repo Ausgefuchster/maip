@@ -26,6 +26,6 @@ maip merge --all <directory> --out <output file>
 This is a list of features and planned features:
 
 - [x] Merge multiple policies into one
-- [ ] Merge all policies in a directory
+- [x] Merge all policies in a directory
 - [ ] Merge all policies in a directory and all subdirectories recursively
 - [ ] Merge managed policies from AWS by ARNs
