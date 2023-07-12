@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use super::Command;
 
 pub struct CLI {
-    pub commands: Vec<Box<dyn Command>>,
-    pub description: String,
-    pub version: String,
+    commands: Vec<Box<dyn Command>>,
+    description: String,
+    version: String,
 }
 
 impl CLI {
