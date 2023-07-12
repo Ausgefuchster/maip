@@ -18,7 +18,7 @@ The output file will be created if it does not exist and overwritten if it does.
 If you have many policies to merge, you can use the `--all` flag to merge all policies in the current directory:
 
 ```
-maip merge --all <output file>
+maip merge --all <directory> --out <output file>
 ```
 
 ## 🎯 Features
