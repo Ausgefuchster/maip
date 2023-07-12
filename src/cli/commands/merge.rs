@@ -6,6 +6,7 @@ use std::collections::HashMap;
 pub struct Merge {
     files: Vec<String>,
     out: String,
+    all: String,
 }
 
 impl Arguments for Merge {
@@ -16,11 +17,19 @@ impl Arguments for Merge {
             .get(0)
             .ok_or("Missing value for --out option".to_string())?
             .to_string();
+        if let Some(files) = args.get("file") {
+            self.files = files.clone();
+        }
+        if let Some(all) = args.get("all") {
+            self.all = all
+                .get(0)
+                .ok_or("Missing value for --all option".to_string())?
+                .to_string();
+        }
         Ok(())
     }
 
     fn set_positional_args(&mut self, args: &[String]) -> Result<(), String> {
-        self.files = args.to_vec();
         Ok(())
     }
 }
