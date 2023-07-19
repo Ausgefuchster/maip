@@ -68,7 +68,11 @@ fn parse_option_args(args: &[String]) -> Result<HashMap<String, Vec<String>>, St
     Ok(option_args)
 }
 
-fn push_to_value_if_present(option_args: &mut HashMap<String, Vec<String>>, key: String, value: String) {
+fn push_to_value_if_present(
+    option_args: &mut HashMap<String, Vec<String>>,
+    key: String,
+    value: String,
+) {
     if let Some(values) = option_args.get_mut(&key) {
         values.push(value);
     } else {
@@ -102,7 +106,7 @@ mod tests {
         let args = vec![
             String::from("--key=value"),
             String::from("--key"),
-            String::from("value")
+            String::from("value"),
         ];
 
         let result = super::parse_option_args(&args).unwrap();
