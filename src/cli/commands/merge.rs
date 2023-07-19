@@ -31,7 +31,7 @@ impl Arguments for Merge {
         Ok(())
     }
 
-    fn set_positional_args(&mut self, args: &[String]) -> Result<(), String> {
+    fn set_positional_args(&mut self, _: &[String]) -> Result<(), String> {
         Ok(())
     }
 }
