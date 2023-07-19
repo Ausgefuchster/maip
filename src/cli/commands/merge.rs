@@ -38,14 +38,16 @@ impl Arguments for Merge {
 
 impl Command for Merge {
     fn run(&self, args: Vec<String>) -> Result<(), String> {
+        let mut documents = files_to_documents(&self.files)?;
+
         if !self.all.is_empty() {
             let directory = read_dir(self.all.as_str())
                 .map_err(|e| format!("Failed to read directory: {}", e))?;
             let files = get_json_files(directory);
-            merge_documents(&files)?;
-            return Ok(());
+            documents.extend(files_to_documents(&files)?);
         }
-        merge_documents(&self.files)?;
+
+        merge_documents(&documents)?;
         Ok(())
     }
 
@@ -62,6 +64,13 @@ impl Command for Merge {
     }
 }
 
+fn files_to_documents(files: &[String]) -> Result<Vec<PolicyDocument>, String> {
+    files
+        .iter()
+        .map(|file| policy_from_file(file.as_str()))
+        .collect()
+}
+
 fn get_json_files(directory: ReadDir) -> Vec<String> {
     directory
         .filter_map(|f| {
@@ -76,16 +85,11 @@ fn get_json_files(directory: ReadDir) -> Vec<String> {
         .collect::<Vec<String>>()
 }
 
-fn merge_documents(documents: &[String]) -> Result<(), String> {
+fn merge_documents(documents: &[PolicyDocument]) -> Result<(), String> {
     if documents.is_empty() {
-        return Err("No files to merge".to_string());
+        return Err("Policies to merge".to_string());
     }
-
-    let documents = documents
-        .iter()
-        .map(|f| policy_from_file(f))
-        .collect::<Result<Vec<PolicyDocument>, String>>()?;
-    let result = merge_policy_documents(&documents);
+    let result = merge_policy_documents(documents);
 
     policy_to_file("merged.json", &result)?;
     Ok(())
