@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 pub trait Command: Arguments {
-    fn run(&self, args: Vec<String>) -> Result<(), String>;
+    fn run(&self) -> Result<(), String>;
 
     fn name(&self) -> &str;
 

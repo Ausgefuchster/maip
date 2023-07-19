@@ -37,7 +37,7 @@ impl Arguments for Merge {
 }
 
 impl Command for Merge {
-    fn run(&self, args: Vec<String>) -> Result<(), String> {
+    fn run(&self) -> Result<(), String> {
         let mut documents = files_to_documents(&self.files)?;
 
         if !self.all.is_empty() {
