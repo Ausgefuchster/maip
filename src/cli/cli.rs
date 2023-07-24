@@ -42,7 +42,7 @@ impl CLI {
                 .ok_or(format!("Command not found: {}", command))?;
 
             command.set_option_args(&option_args)?;
-            command.run(args[1..].to_vec())?;
+            command.run()?;
 
             return Ok(());
         }
