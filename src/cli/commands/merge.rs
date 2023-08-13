@@ -2,11 +2,14 @@ use std::collections::HashMap;
 use std::fs::{read_dir, ReadDir};
 
 use crate::cli::{Arguments, Command};
-use crate::policy::{merge_policy_documents, policy_from_file, policy_to_file, PolicyDocument};
+use crate::policy::{
+    merge_policy_documents, policy_from_arn, policy_from_file, policy_to_file, PolicyDocument,
+};
 
 #[derive(Default)]
 pub struct Merge {
     files: Vec<String>,
+    arns: Vec<String>,
     out: String,
     all: String,
 }
@@ -21,6 +24,9 @@ impl Arguments for Merge {
             .to_string();
         if let Some(files) = args.get("file") {
             self.files = files.clone();
+        }
+        if let Some(arns) = args.get("arn") {
+            self.arns = arns.clone();
         }
         if let Some(all) = args.get("all") {
             self.all = all
@@ -39,6 +45,7 @@ impl Arguments for Merge {
 impl Command for Merge {
     fn run(&self) -> Result<(), String> {
         let mut documents = files_to_documents(&self.files)?;
+        documents.extend(arns_to_documents(&self.arns)?);
 
         if !self.all.is_empty() {
             let directory = read_dir(self.all.as_str())
@@ -72,6 +79,12 @@ fn files_to_documents(files: &[String]) -> Result<Vec<PolicyDocument>, String> {
     files
         .iter()
         .map(|file| policy_from_file(file.as_str()))
+        .collect()
+}
+
+fn arns_to_documents(arns: &[String]) -> Result<Vec<PolicyDocument>, String> {
+    arns.iter()
+        .map(|arn| policy_from_arn(arn.as_str()))
         .collect()
 }
 

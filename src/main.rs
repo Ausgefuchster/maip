@@ -1,7 +1,7 @@
 use std::env;
 
-use maip::cli::CLI;
 use maip::cli::commands::Merge;
+use maip::cli::CLI;
 
 fn main() {
     let mut cli = CLI::build()
