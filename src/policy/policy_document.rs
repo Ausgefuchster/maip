@@ -5,6 +5,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, to_writer_pretty};
+use tokio::runtime::Builder;
 
 use super::policy_statement::{merge_statements, PolicyStatement};
 
@@ -89,4 +90,38 @@ pub fn policy_to_file(file: &str, policy_document: &PolicyDocument) -> Result<()
     let writer = BufWriter::new(file);
     to_writer_pretty(writer, policy_document).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+pub fn policy_from_arn(arn: &str) -> Result<PolicyDocument, String> {
+    let runtime = Builder::new_multi_thread()
+        .worker_threads(1)
+        .enable_all()
+        .build()
+        .unwrap();
+
+    runtime.block_on(async {
+        let config = aws_config::load_from_env().await;
+        let client = aws_sdk_iam::Client::new(&config);
+
+        let policy = client
+            .get_policy()
+            .policy_arn(arn)
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let policy_version = client
+            .get_policy_version()
+            .policy_arn(arn)
+            .version_id(policy.policy().unwrap().default_version_id().unwrap())
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let policy_document = policy_version.policy_version().unwrap().document().unwrap();
+        let policy_document = urlencoding::decode(policy_document).unwrap();
+
+        let policy_document: PolicyDocument = serde_json::from_str(&policy_document).unwrap();
+        Ok(policy_document)
+    })
 }
