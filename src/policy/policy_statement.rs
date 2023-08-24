@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use crate::json_string_or_vec::serialize_string_or_vec;
+
 use super::{merge::Merge, ConditionStatement};
 
 #[derive(Serialize, Debug, PartialEq, Clone)]
@@ -7,10 +9,10 @@ use super::{merge::Merge, ConditionStatement};
 pub struct PolicyStatement {
     pub effect: String,
 
-    #[serde(deserialize_with = "string_or_seq_string")]
+    #[serde(deserialize_with = "string_or_seq_string", serialize_with = "serialize_string_or_vec")]
     pub action: Vec<String>,
 
-    #[serde(deserialize_with = "string_or_seq_string")]
+    #[serde(deserialize_with = "string_or_seq_string", serialize_with = "serialize_string_or_vec")]
     pub resource: Vec<String>,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

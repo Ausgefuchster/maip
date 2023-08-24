@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, de::Error};
+use serde::{de::Error, Deserialize};
 use serde_json::Value;
 
-use super::{PolicyStatement, Condition, ConditionStatement};
+use super::{Condition, ConditionStatement, PolicyStatement};
 
 impl<'de> Deserialize<'de> for PolicyStatement {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
