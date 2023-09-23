@@ -9,10 +9,16 @@ use super::{merge::Merge, ConditionStatement};
 pub struct PolicyStatement {
     pub effect: String,
 
-    #[serde(deserialize_with = "string_or_seq_string", serialize_with = "serialize_string_or_vec")]
+    #[serde(
+        deserialize_with = "string_or_seq_string",
+        serialize_with = "serialize_string_or_vec"
+    )]
     pub action: Vec<String>,
 
-    #[serde(deserialize_with = "string_or_seq_string", serialize_with = "serialize_string_or_vec")]
+    #[serde(
+        deserialize_with = "string_or_seq_string",
+        serialize_with = "serialize_string_or_vec"
+    )]
     pub resource: Vec<String>,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -32,6 +38,33 @@ impl PolicyStatement {
             resource,
             condition,
         }
+    }
+
+    pub fn reduce(&mut self) {
+        let asterisk_actions = self
+            .action
+            .clone()
+            .into_iter()
+            .filter(|a| a.ends_with('*'))
+            .map(|a| a.trim_end_matches('*').to_string())
+            .collect::<Vec<String>>();
+
+        if asterisk_actions.is_empty() {
+            return;
+        }
+
+        self.action.retain(|a| {
+            !asterisk_actions
+                .iter()
+                .any(|asterisk_action| a.starts_with(asterisk_action))
+        });
+
+        self.action.extend(
+            asterisk_actions
+                .into_iter()
+                .map(|a| a + "*")
+                .collect::<Vec<String>>(),
+        );
     }
 }
 
