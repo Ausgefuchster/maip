@@ -47,7 +47,11 @@ impl Command for Merge {
             documents.extend(files_to_documents(&files)?);
         }
 
-        merge_documents(&documents)?;
+        let mut result = merge_documents(&documents)?;
+        result.reduce();
+        result.sort();
+
+        policy_to_file(self.out.as_str(), &result)?;
         Ok(())
     }
 
@@ -85,12 +89,11 @@ fn get_json_files(directory: ReadDir) -> Vec<String> {
         .collect::<Vec<String>>()
 }
 
-fn merge_documents(documents: &[PolicyDocument]) -> Result<(), String> {
+fn merge_documents(documents: &[PolicyDocument]) -> Result<PolicyDocument, String> {
     if documents.is_empty() {
-        return Err("Policies to merge".to_string());
+        return Err("No documents to merge".to_string());
     }
-    let result = merge_policy_documents(documents);
 
-    policy_to_file("merged.json", &result)?;
-    Ok(())
+    let result = merge_policy_documents(documents)?;
+    Ok(result)
 }

@@ -20,24 +20,28 @@ impl PolicyDocument {
         Self { version, statement }
     }
 
-    /// Returns the number of characters in the policy document
     pub fn size(&self) -> usize {
         serde_json::to_string(self).unwrap().len()
     }
 
-    /// Sorts the statements by effect
-    /// Then by action length
     pub fn sort(&mut self) {
         self.statement
             .sort_by(|a, b| a.effect.cmp(&b.effect).then(a.action.cmp(&b.action)));
+
+        self.statement
+            .iter_mut()
+            .for_each(|a| a.action.sort_by_key(|a| a.to_lowercase()));
+    }
+
+    pub fn reduce(&mut self) {
+        self.statement.iter_mut().for_each(|s| s.reduce());
     }
 }
 
-pub fn merge_policy_documents(documents: &[PolicyDocument]) -> PolicyDocument {
-    assert!(
-        documents.iter().all(|d| d.version == "2012-10-17"),
-        "Only version 2012-10-17 is supported"
-    );
+pub fn merge_policy_documents(documents: &[PolicyDocument]) -> Result<PolicyDocument, String> {
+    if documents.iter().any(|d| d.version != "2012-10-17") {
+        return Err("Only version 2012-10-17 is supported".to_string());
+    }
 
     let mut new_document = documents.iter().fold(
         PolicyDocument::new("2012-10-17".to_string(), Vec::new()),
@@ -49,8 +53,7 @@ pub fn merge_policy_documents(documents: &[PolicyDocument]) -> PolicyDocument {
 
     merge_policy_document_statements(&mut new_document);
 
-    new_document.sort();
-    new_document
+    Ok(new_document)
 }
 
 pub fn merge_policy_document_statements(document: &mut PolicyDocument) {
@@ -67,9 +70,7 @@ pub fn merge_policy_document_statements(document: &mut PolicyDocument) {
             }
         }
         if !merged {
-            let mut statement = statement.clone();
-            statement.action.sort_by_key(|a| a.to_lowercase());
-            merged_statements.push(statement);
+            merged_statements.push(statement.clone());
         }
     }
 
