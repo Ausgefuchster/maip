@@ -1,8 +1,9 @@
 # maip
 
-maip stands for "merge AWS IAM policies". It is a command line tool that merges multiple AWS IAM policies into one.
-Since AWS has quotas that limit the number of managed policies that can be attached to a user, group or role,
-this tool can be used to merge multiple policies into one.
+maip is short for "merge aws iam policies," 
+a command-line utility designed to consolidate multiple AWS IAM policies into a single entity.
+Given that AWS imposes restrictions on the number of managed policies that can be linked to a user, group, or role,
+this tool can be used to combine multiple policies into one.
 
 ## ⚙️ Installation
 
@@ -26,14 +27,14 @@ maip merge --all <directory> --out <output file>
 To use docker you can simply mount the directory containing the policies to merge into the container:
 
 ```sh
-docker run -v <directory>:/policies -v maip merge --all /policies
+docker run -v <directory>:/policies ghcr.io/ausgefuchster/maip:<version> merge --all /policies
 ```
 
 For running it with AWS managed policies you need to
 provide the environment variables to the container:
 
 ```sh
-docker run -v <directory>:/policies -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION maip merge --all /policies
+docker run -v <directory>:/policies -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION ghcr.io/ausgefuchster/maip:<version> merge --all /policies
 ```
 
 ## 🎯 Features
