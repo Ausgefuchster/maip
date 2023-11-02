@@ -16,12 +16,12 @@ pub struct Merge {
 
 impl Arguments for Merge {
     fn set_option_args(&mut self, args: &HashMap<String, Vec<String>>) -> Result<(), String> {
-        self.out = args
-            .get("out")
-            .unwrap_or(&vec!["merged.json".to_string()])
-            .get(0)
-            .ok_or("Missing value for --out option".to_string())?
-            .to_string();
+        if let Some(out) = args.get("out") {
+            self.out = out
+                .get(0)
+                .ok_or("Missing value for --out option".to_string())?
+                .to_string();
+        }
         if let Some(files) = args.get("file") {
             self.files = files.clone();
         }
@@ -58,6 +58,10 @@ impl Command for Merge {
         result.reduce();
         result.sort();
 
+        if self.out.is_empty() {
+            println!("{}", serde_json::to_string_pretty(&result).unwrap());
+            return Ok(());
+        }
         policy_to_file(self.out.as_str(), &result)?;
         Ok(())
     }
